@@ -24,7 +24,7 @@ export const deleteConfigFile = (id: string, fileId: string) =>
   api.delete<IProject>(`/projects/${id}/config-files/${fileId}`).then(r => r.data);
 
 // Env variables
-export const addEnvVariable = (id: string, data: { key: string; value: string }) =>
+export const addEnvVariable = (id: string, data: { key: string; value: string; scope?: string }) =>
   api.post<IProject>(`/projects/${id}/env-variables`, data).then(r => r.data);
 export const deleteEnvVariable = (id: string, varId: string) =>
   api.delete<IProject>(`/projects/${id}/env-variables/${varId}`).then(r => r.data);

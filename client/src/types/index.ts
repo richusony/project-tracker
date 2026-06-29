@@ -10,6 +10,7 @@ export interface IEnvVariable {
   _id: string;
   key: string;
   value: string;
+  scope: 'all' | 'client' | 'server';
 }
 
 export interface IPaymentEntry {
@@ -45,6 +46,7 @@ export interface IProject {
   name: string;
   brief?: string;
   status: 'active' | 'paused' | 'completed';
+  repoType?: 'single' | 'multi';
   timer: ITimer;
   configFiles: IConfigFile[];
   envVariables: IEnvVariable[];

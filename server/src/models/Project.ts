@@ -12,6 +12,7 @@ export interface IEnvVariable {
   _id?: mongoose.Types.ObjectId;
   key: string;
   value: string;
+  scope: 'all' | 'client' | 'server';
 }
 
 export interface IPaymentEntry {
@@ -46,6 +47,7 @@ export interface IProject extends Document {
   name: string;
   brief?: string;
   status: 'active' | 'paused' | 'completed';
+  repoType?: 'single' | 'multi';
   timer: ITimer;
   configFiles: IConfigFile[];
   envVariables: IEnvVariable[];
@@ -93,10 +95,12 @@ const ProjectSchema = new Schema<IProject>(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    repoType: { type: String, enum: ['single', 'multi'] },
     envVariables: [
       {
         key: { type: String, required: true },
         value: { type: String, required: true },
+        scope: { type: String, enum: ['all', 'client', 'server'], default: 'all' },
       },
     ],
     pricing: { type: PricingSchema, default: () => ({ type: 'none', currency: 'USD', advanceReceived: false, finalReceived: false, hourlyPayments: [] }) },

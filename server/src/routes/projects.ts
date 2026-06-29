@@ -137,7 +137,7 @@ router.post('/:id/env-variables', async (req: Request, res: Response) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
-    project.envVariables.push({ key: req.body.key, value: req.body.value });
+    project.envVariables.push({ key: req.body.key, value: req.body.value, scope: req.body.scope || 'all' });
     await project.save();
     res.json(project);
   } catch (err) {
