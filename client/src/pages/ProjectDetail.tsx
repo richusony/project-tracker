@@ -11,6 +11,7 @@ import ConfigFiles from '../components/ConfigFiles';
 import EnvVariables from '../components/EnvVariables';
 import Pricing from '../components/Pricing';
 import { useDialog } from '../components/DialogProvider';
+import { StatusPicker } from '../components/StatusBadge';
 
 type Tab = 'timer' | 'notes' | 'config' | 'env' | 'pricing';
 
@@ -78,6 +79,11 @@ export default function ProjectDetail() {
     try {
       setProject(await updateProject(project._id, { brief: draftBrief.trim() }));
     } finally { setSaving(false); setEditingBrief(false); }
+  };
+
+  const handleStatusChange = async (status: IProject['status']) => {
+    if (!project) return;
+    setProject(await updateProject(project._id, { status }));
   };
 
   const handleArchive = async () => {
@@ -183,6 +189,12 @@ export default function ProjectDetail() {
             <Archive className="w-4 h-4" />
             <span className="hidden sm:block">Archive</span>
           </button>
+        </div>
+
+        {/* Status row */}
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-xs text-ink-3 font-medium">Status</span>
+          <StatusPicker status={project.status} onChange={handleStatusChange} />
         </div>
       </div>
 

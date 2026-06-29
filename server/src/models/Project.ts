@@ -46,7 +46,7 @@ export interface ITimer {
 export interface IProject extends Document {
   name: string;
   brief?: string;
-  status: 'active' | 'paused' | 'completed';
+  status: 'planning' | 'ongoing' | 'on-hold' | 'completed' | 'abandoned';
   repoType?: 'single' | 'multi';
   timer: ITimer;
   configFiles: IConfigFile[];
@@ -82,7 +82,7 @@ const ProjectSchema = new Schema<IProject>(
   {
     name: { type: String, required: true, trim: true },
     brief: { type: String, trim: true },
-    status: { type: String, enum: ['active', 'paused', 'completed'], default: 'active' },
+    status: { type: String, enum: ['planning', 'ongoing', 'on-hold', 'completed', 'abandoned'], default: 'ongoing' },
     timer: {
       totalSeconds: { type: Number, default: 0 },
       isRunning: { type: Boolean, default: false },

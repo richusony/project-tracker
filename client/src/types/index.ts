@@ -45,7 +45,7 @@ export interface IProject {
   _id: string;
   name: string;
   brief?: string;
-  status: 'active' | 'paused' | 'completed';
+  status: 'planning' | 'ongoing' | 'on-hold' | 'completed' | 'abandoned';
   repoType?: 'single' | 'multi';
   timer: ITimer;
   configFiles: IConfigFile[];

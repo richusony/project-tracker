@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Clock, FolderOpen, Trash2, ChevronRight, Timer } from 'lucide-react';
+import { Plus, FolderOpen, Trash2, ChevronRight, Timer } from 'lucide-react';
 import { getProjects, deleteProject } from '../api';
 import { IProject } from '../types';
 import AddProjectModal from '../components/AddProjectModal';
 import { useDialog } from '../components/DialogProvider';
+import { StatusBadge } from '../components/StatusBadge';
 import { format } from 'date-fns';
 
 function formatDuration(totalSeconds: number, isRunning: boolean, lastStarted?: string) {
@@ -94,11 +95,20 @@ function ProjectCard({ project, onDelete }: { project: IProject; onDelete: () =>
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-1 border-t border-stroke">
-        <div className="flex items-center gap-1.5 text-xs text-ink-3">
-          <Timer className="w-3.5 h-3.5" />
-          <span className={project.timer.isRunning ? 'text-emerald-500 font-medium' : ''}>
-            {duration}
-          </span>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={project.status} />
+          {project.timer.isRunning && (
+            <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium">
+              <Timer className="w-3 h-3" />
+              {duration}
+            </span>
+          )}
+          {!project.timer.isRunning && duration !== '—' && (
+            <span className="flex items-center gap-1 text-xs text-ink-3">
+              <Timer className="w-3 h-3" />
+              {duration}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1 text-xs text-ink-3">
           <span>{format(new Date(project.createdAt), 'MMM d, yyyy')}</span>
