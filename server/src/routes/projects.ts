@@ -192,11 +192,15 @@ router.patch('/:id/pricing', async (req: Request, res: Response) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
-    Object.assign(project.pricing, req.body);
+    // Strip _id and hourlyPayments — _id is immutable on Mongoose subdocuments,
+    // hourlyPayments are managed via their own dedicated routes.
+    const { _id, hourlyPayments, ...pricingData } = req.body;
+    Object.assign(project.pricing, pricingData);
     project.markModified('pricing');
     await project.save();
     res.json(project);
   } catch (err) {
+    console.error('Pricing update error:', err);
     res.status(400).json({ error: 'Failed to update pricing' });
   }
 });
