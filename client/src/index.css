@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+  .card {
+    @apply bg-slate-900 border border-slate-800 rounded-xl p-5;
+  }
+  .input {
+    @apply bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-full;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-400 mb-1;
+  }
+  .tab-active {
+    @apply bg-brand-600 text-white;
+  }
+  .tab-inactive {
+    @apply text-slate-400 hover:text-slate-200 hover:bg-slate-800;
+  }
+}
+
+/* TipTap editor styles */
+.ProseMirror {
+  @apply outline-none min-h-[200px] text-slate-100;
+}
+
+.ProseMirror p {
+  @apply mb-3;
+}
+
+.ProseMirror h1 { @apply text-3xl font-bold mb-4 text-white; }
+.ProseMirror h2 { @apply text-2xl font-bold mb-3 text-white; }
+.ProseMirror h3 { @apply text-xl font-bold mb-2 text-white; }
+
+.ProseMirror ul {
+  @apply list-disc ml-6 mb-3;
+}
+.ProseMirror ol {
+  @apply list-decimal ml-6 mb-3;
+}
+.ProseMirror li { @apply mb-1; }
+
+.ProseMirror a {
+  @apply text-brand-500 underline cursor-pointer;
+}
+
+.ProseMirror strong { @apply font-bold; }
+.ProseMirror em { @apply italic; }
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-slate-600 pl-4 text-slate-400 my-3;
+}
+
+.ProseMirror code {
+  @apply bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-brand-300;
+}
+
+.ProseMirror pre {
+  @apply bg-slate-800 p-4 rounded-lg my-3;
+}
+
+.ProseMirror div.youtube-embed {
+  @apply my-4 rounded-xl overflow-hidden;
+}
+
+.ProseMirror div[data-youtube-video] iframe {
+  @apply w-full rounded-xl;
+}
+
+/* Datepicker dark theme */
+.react-datepicker {
+  @apply bg-slate-800 border border-slate-700 rounded-xl text-slate-100 font-sans;
+}
+.react-datepicker__header {
+  @apply bg-slate-700 border-b border-slate-600;
+}
+.react-datepicker__current-month,
+.react-datepicker__day-name { @apply text-slate-200; }
+.react-datepicker__day {
+  @apply text-slate-200 hover:bg-brand-600 rounded;
+}
+.react-datepicker__day--selected { @apply bg-brand-600 text-white; }
+.react-datepicker__day--keyboard-selected { @apply bg-brand-700; }
+.react-datepicker__navigation-icon::before { @apply border-slate-400; }
