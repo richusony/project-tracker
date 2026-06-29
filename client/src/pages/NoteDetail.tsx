@@ -22,6 +22,8 @@ export default function NoteDetail() {
       setNote(n);
       setTitle(n.title);
       setContent(n.content);
+      // Auto-enter edit mode for new empty notes
+      if (!n.content) setEditing(true);
     }).finally(() => setLoading(false));
   }, [noteId]);
 

@@ -1,4 +1,5 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Youtube from '@tiptap/extension-youtube';
@@ -42,6 +43,10 @@ export default function RichTextEditor({ content, onChange, editable = true }: P
     editable,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
+
+  useEffect(() => {
+    if (editor) editor.setEditable(editable ?? true);
+  }, [editor, editable]);
 
   if (!editor) return null;
 
