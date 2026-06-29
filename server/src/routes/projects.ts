@@ -190,14 +190,14 @@ router.delete('/:id/env-variables/:varId', async (req: Request, res: Response) =
 // --- Pricing ---
 router.patch('/:id/pricing', async (req: Request, res: Response) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ error: 'Project not found' });
-    // Strip _id and hourlyPayments — _id is immutable on Mongoose subdocuments,
-    // hourlyPayments are managed via their own dedicated routes.
+    // Strip _id (immutable) and hourlyPayments (managed via dedicated routes).
     const { _id, hourlyPayments, ...pricingData } = req.body;
-    Object.assign(project.pricing, pricingData);
-    project.markModified('pricing');
-    await project.save();
+    const $set: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(pricingData)) {
+      $set[`pricing.${key}`] = val;
+    }
+    const project = await Project.findByIdAndUpdate(req.params.id, { $set }, { new: true });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json(project);
   } catch (err) {
     console.error('Pricing update error:', err);

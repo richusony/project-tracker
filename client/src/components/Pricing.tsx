@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { DollarSign, Check, Plus, Pencil } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { DollarSign, Check, Plus, Pencil, RefreshCw } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { updatePricing, addHourlyPayment, updateHourlyPayment, getExchangeRate } from '../api';
@@ -75,13 +75,26 @@ export default function Pricing({ project, onUpdate }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<IPricing>>({});
   const [inrRate, setInrRate] = useState(0);
+  const [rateUpdatedAt, setRateUpdatedAt] = useState('');
+  const [rateRefreshing, setRateRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newPayment, setNewPayment] = useState({ amount: '', description: '' });
   const [addingPayment, setAddingPayment] = useState(false);
 
+  const fetchRate = useCallback(async (currency: string) => {
+    setRateRefreshing(true);
+    try {
+      const { rate, updatedAt } = await getExchangeRate(currency);
+      setInrRate(rate);
+      setRateUpdatedAt(updatedAt);
+    } finally {
+      setRateRefreshing(false);
+    }
+  }, []);
+
   useEffect(() => {
-    if (p.currency) getExchangeRate(p.currency).then(setInrRate);
-  }, [p.currency]);
+    if (p.currency) fetchRate(p.currency);
+  }, [p.currency, fetchRate]);
 
   const saveEdit = async () => {
     setLoading(true);
@@ -89,7 +102,7 @@ export default function Pricing({ project, onUpdate }: Props) {
       const updated = await updatePricing(project._id, form);
       onUpdate(updated);
       setEditing(false);
-      if (form.currency) getExchangeRate(form.currency).then(setInrRate);
+      if (form.currency) fetchRate(form.currency);
     } finally { setLoading(false); }
   };
 
@@ -202,6 +215,25 @@ export default function Pricing({ project, onUpdate }: Props) {
           <Pencil className="w-3.5 h-3.5" /> Edit
         </button>
       </div>
+
+      {p.currency !== 'INR' && (
+        <div className="flex items-center gap-2 text-xs text-ink-3">
+          <button
+            onClick={() => fetchRate(p.currency)}
+            disabled={rateRefreshing}
+            className="flex items-center gap-1 hover:text-ink transition-colors disabled:opacity-50"
+            title="Refresh exchange rate"
+          >
+            <RefreshCw className={`w-3 h-3 ${rateRefreshing ? 'animate-spin' : ''}`} />
+            Refresh rate
+          </button>
+          {rateUpdatedAt && (
+            <span>
+              · rate as of {new Date(rateUpdatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Fixed pricing */}
       {p.type === 'fixed' && (

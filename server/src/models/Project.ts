@@ -82,7 +82,7 @@ const ProjectSchema = new Schema<IProject>(
   {
     name: { type: String, required: true, trim: true },
     brief: { type: String, trim: true },
-    status: { type: String, enum: ['planning', 'ongoing', 'on-hold', 'completed', 'abandoned'], default: 'ongoing' },
+    status: { type: String, enum: ['planning', 'ongoing', 'on-hold', 'completed', 'abandoned', 'active', 'paused'], default: 'ongoing' },
     timer: {
       totalSeconds: { type: Number, default: 0 },
       isRunning: { type: Boolean, default: false },

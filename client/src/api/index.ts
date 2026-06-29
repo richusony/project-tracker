@@ -49,13 +49,25 @@ export const updateNote = (id: string, data: { title: string; content: string })
   api.patch<INote>(`/notes/${id}`, data).then(r => r.data);
 export const deleteNote = (id: string) => api.delete(`/notes/${id}`).then(r => r.data);
 
-// Currency conversion - using open exchange rate
-export const getExchangeRate = async (from: string): Promise<number> => {
-  if (from === 'INR') return 1;
+export const getExchangeRate = async (from: string): Promise<{ rate: number; updatedAt: string }> => {
+  if (from === 'INR') return { rate: 1, updatedAt: new Date().toISOString() };
+  // Primary: open.er-api.com — free, no key, updates every 24 h
   try {
-    const res = await axios.get(`https://api.exchangerate-api.com/v4/latest/${from}`);
-    return res.data.rates.INR || 0;
+    const res = await axios.get(`https://open.er-api.com/v6/latest/${from}`);
+    return {
+      rate: res.data.rates?.INR || 0,
+      updatedAt: res.data.time_last_update_utc || new Date().toISOString(),
+    };
   } catch {
-    return 0;
+    // Fallback: exchangerate-api.com
+    try {
+      const res = await axios.get(`https://api.exchangerate-api.com/v4/latest/${from}`);
+      return {
+        rate: res.data.rates?.INR || 0,
+        updatedAt: res.data.time_last_update_utc || new Date().toISOString(),
+      };
+    } catch {
+      return { rate: 0, updatedAt: '' };
+    }
   }
 };
