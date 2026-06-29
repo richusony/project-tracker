@@ -32,7 +32,7 @@ function ProjectCard({ project, onDelete }: { project: IProject; onDelete: () =>
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!window.confirm(`Delete "${project.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Move "${project.name}" to trash?`)) return;
     await deleteProject(project._id);
     onDelete();
   };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, FileText, FileCode, KeyRound, DollarSign, Clock, Pencil, Check, X } from 'lucide-react';
-import { getProject, updateProject } from '../api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, FileText, FileCode, KeyRound, DollarSign, Clock, Pencil, Check, X, Trash2 } from 'lucide-react';
+import { getProject, updateProject, deleteProject } from '../api';
 import { IProject } from '../types';
 import Timer from '../components/Timer';
 import ConfigFiles from '../components/ConfigFiles';
@@ -20,6 +20,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [project, setProject] = useState<IProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('timer');
@@ -65,6 +66,13 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!project) return;
+    if (!window.confirm(`Move "${project.name}" to trash?`)) return;
+    await deleteProject(project._id);
+    navigate('/');
+  };
+
   const saveBrief = async () => {
     if (!project || draftBrief === (project.brief ?? '')) {
       setEditingBrief(false);
@@ -89,7 +97,7 @@ export default function ProjectDetail() {
         <Link to="/" className="text-slate-400 hover:text-white transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </Link>
-        <div className="space-y-0.5">
+        <div className="space-y-0.5 flex-1">
           {editingTitle ? (
             <div className="flex items-center gap-1.5">
               <input
@@ -130,6 +138,13 @@ export default function ProjectDetail() {
             </div>
           )}
         </div>
+        <button
+          onClick={handleDelete}
+          className="ml-auto text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
+          title="Move to trash"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Tabs */}

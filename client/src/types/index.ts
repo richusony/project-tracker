@@ -51,6 +51,7 @@ export interface IProject {
   configFiles: IConfigFile[];
   envVariables: IEnvVariable[];
   pricing: IPricing;
+  deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

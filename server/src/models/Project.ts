@@ -52,6 +52,7 @@ export interface IProject extends Document {
   configFiles: IConfigFile[];
   envVariables: IEnvVariable[];
   pricing: IPricing;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -104,6 +105,7 @@ const ProjectSchema = new Schema<IProject>(
       },
     ],
     pricing: { type: PricingSchema, default: () => ({ type: 'none', currency: 'USD', advanceReceived: false, finalReceived: false, hourlyPayments: [] }) },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );

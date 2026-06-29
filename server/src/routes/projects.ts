@@ -3,20 +3,20 @@ import Project from '../models/Project';
 
 const router = Router();
 
-// GET all projects
+// GET all projects (excludes soft-deleted)
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
+    const projects = await Project.find({ deletedAt: { $exists: false } }).sort({ createdAt: -1 });
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch projects' });
   }
 });
 
-// GET single project
+// GET single project (excludes soft-deleted)
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findOne({ _id: req.params.id, deletedAt: { $exists: false } });
     if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json(project);
   } catch (err) {
@@ -46,10 +46,15 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// DELETE project
+// DELETE project (soft delete)
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await Project.findByIdAndDelete(req.params.id);
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { deletedAt: new Date() },
+      { new: true }
+    );
+    if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json({ message: 'Project deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete project' });
