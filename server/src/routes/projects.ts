@@ -3,6 +3,31 @@ import Project from '../models/Project';
 
 const router = Router();
 
+// GET archived (soft-deleted) projects — must be before /:id
+router.get('/archived', async (_req: Request, res: Response) => {
+  try {
+    const projects = await Project.find({ deletedAt: { $exists: true } }).sort({ deletedAt: -1 });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch archived projects' });
+  }
+});
+
+// PATCH restore a soft-deleted project
+router.patch('/:id/restore', async (req: Request, res: Response) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $unset: { deletedAt: '' } },
+      { new: true }
+    );
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to restore project' });
+  }
+});
+
 // GET all projects (excludes soft-deleted)
 router.get('/', async (_req: Request, res: Response) => {
   try {

@@ -9,6 +9,8 @@ export const getProject = (id: string) => api.get<IProject>(`/projects/${id}`).t
 export const createProject = (data: { name: string; brief?: string }) =>
   api.post<IProject>('/projects', data).then(r => r.data);
 export const deleteProject = (id: string) => api.delete(`/projects/${id}`).then(r => r.data);
+export const getArchivedProjects = () => api.get<IProject[]>('/projects/archived').then(r => r.data);
+export const restoreProject = (id: string) => api.patch<IProject>(`/projects/${id}/restore`).then(r => r.data);
 export const updateProject = (id: string, data: Partial<IProject>) =>
   api.patch<IProject>(`/projects/${id}`, data).then(r => r.data);
 

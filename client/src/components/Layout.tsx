@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
-import { FolderKanban } from 'lucide-react';
+import { FolderKanban, Archive } from 'lucide-react';
 
 export default function Layout() {
   return (
@@ -9,6 +9,9 @@ export default function Layout() {
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <FolderKanban className="w-6 h-6 text-brand-500" />
             <span className="font-bold text-lg text-white">Project Tracker</span>
+          </Link>
+          <Link to="/archives" className="ml-auto flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors">
+            <Archive className="w-4 h-4" /> Archives
           </Link>
         </div>
       </header>

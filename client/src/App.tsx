@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import ProjectDetail from './pages/ProjectDetail';
 import NotesList from './pages/NotesList';
 import NoteDetail from './pages/NoteDetail';
+import Archives from './pages/Archives';
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="archives" element={<Archives />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="projects/:id/notes" element={<NotesList />} />
           <Route path="projects/:id/notes/:noteId" element={<NoteDetail />} />
