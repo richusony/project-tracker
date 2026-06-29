@@ -2,99 +2,192 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ─────────────────────────────────────────── */
 @layer base {
+  :root {
+    --canvas:    246 248 250;
+    --surface:   255 255 255;
+    --surface-2: 240 243 246;
+    --surface-3: 225 229 234;
+    --stroke:    216 222 228;
+    --stroke-2:  175 184 193;
+    --ink:       31  35  40;
+    --ink-2:     87  96  106;
+    --ink-3:     140 149 159;
+  }
+
+  .dark {
+    --canvas:    13  17  23;
+    --surface:   22  27  34;
+    --surface-2: 33  38  45;
+    --surface-3: 48  54  61;
+    --stroke:    48  54  61;
+    --stroke-2:  72  79  87;
+    --ink:       230 237 243;
+    --ink-2:     139 148 158;
+    --ink-3:     72  79  88;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
+    @apply bg-canvas text-ink font-sans;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-stroke rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-stroke-2; }
+
+  /* Selection */
+  ::selection {
+    @apply bg-brand-500/20 text-ink;
   }
 }
 
+/* ─── Component Classes ──────────────────────────────────────── */
 @layer components {
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold
+           transition-all duration-150 select-none cursor-pointer
+           disabled:opacity-40 disabled:cursor-not-allowed
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas
+           whitespace-nowrap px-4 py-2;
+  }
   .btn-primary {
-    @apply bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply btn bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white shadow-xs;
   }
   .btn-secondary {
-    @apply bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply btn bg-surface border border-stroke text-ink-2 hover:text-ink hover:border-stroke-2 hover:bg-surface-2 shadow-xs;
+  }
+  .btn-ghost {
+    @apply btn text-ink-2 hover:text-ink hover:bg-surface-2;
   }
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply btn bg-red-500 hover:bg-red-400 active:bg-red-600 text-white shadow-xs;
   }
+
+  /* Cards */
   .card {
-    @apply bg-slate-900 border border-slate-800 rounded-xl p-5;
+    @apply bg-surface border border-stroke rounded-2xl;
   }
+  .card-p {
+    @apply card p-5;
+  }
+  .card-interactive {
+    @apply card transition-all duration-200 hover:border-stroke-2 hover:shadow-md cursor-pointer;
+  }
+
+  /* Form */
   .input {
-    @apply bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-full;
+    @apply w-full bg-canvas border border-stroke rounded-xl px-3.5 py-2.5 text-sm text-ink
+           placeholder:text-ink-3
+           focus:outline-none focus:ring-2 focus:ring-brand-500/25 focus:border-brand-500
+           transition-all duration-150;
   }
   .label {
-    @apply block text-sm font-medium text-slate-400 mb-1;
+    @apply block text-xs font-semibold text-ink-3 mb-1.5 tracking-wider uppercase;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-green  { @apply badge bg-emerald-500/10 text-emerald-500; }
+  .badge-amber  { @apply badge bg-amber-500/10 text-amber-500; }
+  .badge-blue   { @apply badge bg-brand-500/10 text-brand-500; }
+  .badge-slate  { @apply badge bg-surface-2 text-ink-2 border border-stroke; }
+
+  /* Tabs */
+  .tab-bar {
+    @apply flex gap-0.5 p-1 bg-surface-2 border border-stroke rounded-xl;
   }
   .tab-active {
-    @apply bg-brand-600 text-white;
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-ink bg-surface border border-stroke shadow-xs transition-all duration-150 whitespace-nowrap;
   }
   .tab-inactive {
-    @apply text-slate-400 hover:text-slate-200 hover:bg-slate-800;
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-ink-2 hover:text-ink hover:bg-surface transition-colors duration-150 whitespace-nowrap cursor-pointer;
+  }
+
+  /* Sidebar tabs (used in ProjectDetail) */
+  .stab-active {
+    @apply flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold
+           text-brand-500 bg-brand-500/10 border border-brand-500/20 transition-all duration-150;
+  }
+  .stab-inactive {
+    @apply flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium
+           text-ink-2 hover:text-ink hover:bg-surface-2 transition-all duration-150 cursor-pointer;
+  }
+
+  /* Section title */
+  .section-title {
+    @apply flex items-center gap-2 text-sm font-semibold text-ink-2;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-stroke;
   }
 }
 
-/* TipTap editor styles */
+/* ─── ProseMirror (Rich Text Editor) ─────────────────────────── */
 .ProseMirror {
-  @apply outline-none min-h-[200px] text-slate-100;
+  @apply outline-none min-h-[240px] text-ink text-sm leading-relaxed;
 }
-
-.ProseMirror p {
-  @apply mb-3;
-}
-
-.ProseMirror h1 { @apply text-3xl font-bold mb-4 text-white; }
-.ProseMirror h2 { @apply text-2xl font-bold mb-3 text-white; }
-.ProseMirror h3 { @apply text-xl font-bold mb-2 text-white; }
-
-.ProseMirror ul {
-  @apply list-disc ml-6 mb-3;
-}
-.ProseMirror ol {
-  @apply list-decimal ml-6 mb-3;
-}
-.ProseMirror li { @apply mb-1; }
-
-.ProseMirror a {
-  @apply text-brand-500 underline cursor-pointer;
-}
-
+.ProseMirror > * + * { @apply mt-2; }
+.ProseMirror p { @apply leading-relaxed; }
+.ProseMirror h1 { @apply text-2xl font-bold text-ink mt-6 mb-2; }
+.ProseMirror h2 { @apply text-xl font-bold text-ink mt-5 mb-2; }
+.ProseMirror h3 { @apply text-lg font-semibold text-ink mt-4 mb-1; }
+.ProseMirror ul { @apply list-disc ml-5 space-y-1; }
+.ProseMirror ol { @apply list-decimal ml-5 space-y-1; }
+.ProseMirror li { @apply leading-relaxed; }
+.ProseMirror a  { @apply text-brand-500 underline underline-offset-2 hover:text-brand-400; }
 .ProseMirror strong { @apply font-bold; }
-.ProseMirror em { @apply italic; }
-
+.ProseMirror em     { @apply italic; }
 .ProseMirror blockquote {
-  @apply border-l-4 border-slate-600 pl-4 text-slate-400 my-3;
+  @apply border-l-4 border-stroke-2 pl-4 text-ink-2 italic my-4;
 }
-
 .ProseMirror code {
-  @apply bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-brand-300;
+  @apply bg-surface-2 border border-stroke px-1.5 py-0.5 rounded-md text-xs font-mono text-brand-400;
 }
-
 .ProseMirror pre {
-  @apply bg-slate-800 p-4 rounded-lg my-3;
+  @apply bg-surface-2 border border-stroke p-4 rounded-xl my-3 overflow-x-auto;
 }
-
-.ProseMirror div.youtube-embed {
-  @apply my-4 rounded-xl overflow-hidden;
+.ProseMirror pre code { @apply bg-transparent border-0 p-0; }
+.ProseMirror hr { @apply border-stroke my-6; }
+.ProseMirror div[data-youtube-video] {
+  @apply my-4 rounded-2xl overflow-hidden border border-stroke;
 }
+.ProseMirror div[data-youtube-video] iframe { @apply w-full aspect-video; }
 
-.ProseMirror div[data-youtube-video] iframe {
-  @apply w-full rounded-xl;
-}
-
-/* Datepicker dark theme */
+/* ─── React DatePicker Theme ──────────────────────────────────── */
+.react-datepicker-wrapper { width: auto; }
+.react-datepicker-popper  { z-index: 60 !important; }
 .react-datepicker {
-  @apply bg-slate-800 border border-slate-700 rounded-xl text-slate-100 font-sans;
+  @apply bg-surface border border-stroke rounded-2xl font-sans shadow-xl overflow-hidden text-ink;
+  border-radius: 1rem !important;
 }
 .react-datepicker__header {
-  @apply bg-slate-700 border-b border-slate-600;
+  @apply bg-surface-2 border-b border-stroke pt-3;
+  border-radius: 1rem 1rem 0 0 !important;
 }
 .react-datepicker__current-month,
-.react-datepicker__day-name { @apply text-slate-200; }
+.react-datepicker__day-name { @apply text-ink text-sm; }
 .react-datepicker__day {
-  @apply text-slate-200 hover:bg-brand-600 rounded;
+  @apply text-ink text-sm hover:bg-brand-500/10 hover:text-brand-500 rounded-lg transition-colors;
 }
-.react-datepicker__day--selected { @apply bg-brand-600 text-white; }
-.react-datepicker__day--keyboard-selected { @apply bg-brand-700; }
-.react-datepicker__navigation-icon::before { @apply border-slate-400; }
+.react-datepicker__day--selected {
+  @apply bg-brand-600 text-white hover:bg-brand-500 hover:text-white rounded-lg;
+}
+.react-datepicker__day--keyboard-selected { @apply bg-brand-500/15 rounded-lg; }
+.react-datepicker__day--outside-month { @apply text-ink-3; }
+.react-datepicker__navigation-icon::before { @apply border-ink-2; }
+.react-datepicker__triangle { display: none !important; }

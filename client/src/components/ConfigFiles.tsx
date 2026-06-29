@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileCode, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { FileCode, Plus, Trash2, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
 import { addConfigFile, deleteConfigFile } from '../api';
 import { IProject, IConfigFile } from '../types';
 import { useDialog } from './DialogProvider';
@@ -13,38 +13,69 @@ interface Props {
 function FileItem({ file, projectId, onDelete }: { file: IConfigFile; projectId: string; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { confirm } = useDialog();
 
   const handleDelete = async () => {
-    const ok = await confirm({ title: 'Delete File', message: `Delete "${file.path}"? This cannot be undone.`, confirmLabel: 'Delete', variant: 'danger' });
+    const ok = await confirm({
+      title: 'Delete File',
+      message: `Delete "${file.path}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
     if (!ok) return;
     setDeleting(true);
     try { await deleteConfigFile(projectId, file._id); onDelete(); }
     finally { setDeleting(false); }
   };
 
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(file.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
-    <div className="border border-slate-700 rounded-lg overflow-hidden">
+    <div className="card overflow-hidden">
       <div
-        className="flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-slate-800 transition-colors"
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-2 transition-colors"
         onClick={() => setOpen(o => !o)}
       >
-        {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-        <FileCode className="w-4 h-4 text-brand-500" />
-        <span className="font-mono text-sm text-slate-200 flex-1">{file.path}</span>
-        <span className="text-xs text-slate-500">{format(new Date(file.createdAt), 'MMM d, yyyy')}</span>
-        <button
-          onClick={e => { e.stopPropagation(); handleDelete(); }}
-          disabled={deleting}
-          className="text-slate-500 hover:text-red-400 transition-colors ml-2"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="w-7 h-7 rounded-lg bg-surface-2 border border-stroke flex items-center justify-center flex-shrink-0">
+          {open
+            ? <ChevronDown className="w-3.5 h-3.5 text-ink-2" />
+            : <ChevronRight className="w-3.5 h-3.5 text-ink-2" />
+          }
+        </div>
+        <FileCode className="w-4 h-4 text-brand-500 flex-shrink-0" />
+        <span className="font-mono text-sm text-ink flex-1 truncate">{file.path}</span>
+        <span className="text-xs text-ink-3 flex-shrink-0 hidden sm:block">
+          {format(new Date(file.createdAt), 'MMM d, yyyy')}
+        </span>
+        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+          <button
+            onClick={handleCopy}
+            className="btn-ghost p-1.5 rounded-lg text-ink-3 hover:text-ink-2 transition-colors"
+            title="Copy content"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="btn-ghost p-1.5 rounded-lg text-ink-3 hover:text-red-500 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
       {open && (
-        <pre className="bg-slate-950 p-4 text-xs text-slate-300 font-mono overflow-x-auto border-t border-slate-700 max-h-80 overflow-y-auto">
-          {file.content}
-        </pre>
+        <div className="border-t border-stroke">
+          <pre className="bg-canvas p-4 text-xs text-ink-2 font-mono overflow-x-auto max-h-80 overflow-y-auto leading-relaxed">
+            {file.content}
+          </pre>
+        </div>
       )}
     </div>
   );
@@ -64,33 +95,31 @@ export default function ConfigFiles({ project, onUpdate }: Props) {
       const name = path.split('/').pop() || path;
       const updated = await addConfigFile(project._id, { name, path: path.trim(), content: content.trim() });
       onUpdate(updated);
-      setPath('');
-      setContent('');
-      setAdding(false);
-    } finally {
-      setLoading(false);
-    }
+      setPath(''); setContent(''); setAdding(false);
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-white flex items-center gap-2">
+        <div className="section-title">
           <FileCode className="w-4 h-4 text-brand-500" />
           Config Files
-        </h3>
-        <button onClick={() => setAdding(true)} className="btn-primary flex items-center gap-1.5 text-sm py-1.5">
-          <Plus className="w-4 h-4" /> Add File
+        </div>
+        <button onClick={() => setAdding(true)} className="btn-primary gap-1.5 text-sm py-1.5">
+          <Plus className="w-3.5 h-3.5" /> Add File
         </button>
       </div>
 
+      {/* Add form */}
       {adding && (
-        <form onSubmit={handleAdd} className="card space-y-3 border-brand-500/30">
+        <form onSubmit={handleAdd} className="card-p space-y-3 border-brand-500/30 animate-slide-up">
           <div>
             <label className="label">File Path</label>
             <input
-              className="input font-mono text-sm"
-              placeholder="studio-raaga/.env"
+              className="input font-mono"
+              placeholder="e.g. studio-raaga/.env"
               value={path}
               onChange={e => setPath(e.target.value)}
               autoFocus
@@ -101,24 +130,36 @@ export default function ConfigFiles({ project, onUpdate }: Props) {
             <textarea
               className="input font-mono text-xs resize-none"
               rows={10}
-              placeholder="Paste the file content here..."
+              placeholder="Paste the file content here…"
               value={content}
               onChange={e => setContent(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => { setAdding(false); setPath(''); setContent(''); }} className="btn-secondary flex-1">
+            <button
+              type="button"
+              onClick={() => { setAdding(false); setPath(''); setContent(''); }}
+              className="btn-secondary flex-1"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={!path.trim() || !content.trim() || loading} className="btn-primary flex-1">
-              {loading ? 'Saving...' : 'Save File'}
+            <button
+              type="submit"
+              disabled={!path.trim() || !content.trim() || loading}
+              className="btn-primary flex-1"
+            >
+              {loading ? 'Saving…' : 'Save File'}
             </button>
           </div>
         </form>
       )}
 
+      {/* File list */}
       {project.configFiles.length === 0 && !adding ? (
-        <p className="text-slate-500 text-sm text-center py-6">No config files added yet.</p>
+        <div className="card-p text-center py-8">
+          <FileCode className="w-10 h-10 text-ink-3 mx-auto mb-3" />
+          <p className="text-sm text-ink-2">No config files added yet.</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {project.configFiles.map(file => (

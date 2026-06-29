@@ -33,17 +33,18 @@ export function useDialog() {
 }
 
 type ConfirmState = { opts: ConfirmOptions; resolve: (v: boolean) => void } | null;
-type PromptState = { opts: PromptOptions; resolve: (v: string | null) => void } | null;
+type PromptState  = { opts: PromptOptions;  resolve: (v: string | null) => void } | null;
 
+/* ── Confirm Dialog ───────────────────────────────────────────── */
 function ConfirmDialog({ state, onResolve }: { state: ConfirmState; onResolve: (v: boolean) => void }) {
   useEffect(() => {
     if (!state) return;
-    const handler = (e: KeyboardEvent) => {
+    const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onResolve(false);
-      if (e.key === 'Enter') onResolve(true);
+      if (e.key === 'Enter')  onResolve(true);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, [state, onResolve]);
 
   if (!state) return null;
@@ -52,47 +53,54 @@ function ConfirmDialog({ state, onResolve }: { state: ConfirmState; onResolve: (
   const isDanger = variant === 'danger';
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => onResolve(false)}>
-      <div className="card w-full max-w-sm shadow-2xl border-slate-700" onClick={e => e.stopPropagation()}>
-        <div className="flex items-start gap-4 mb-5">
-          <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isDanger ? 'bg-red-500/15' : 'bg-amber-500/15'}`}>
-            {isDanger
-              ? <Trash2 className="w-5 h-5 text-red-400" />
-              : <AlertTriangle className="w-5 h-5 text-amber-400" />
-            }
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-canvas/70 backdrop-blur-md animate-fade-in"
+      onClick={() => onResolve(false)}
+    >
+      <div
+        className="card w-full max-w-sm shadow-modal animate-slide-up"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-5">
+          <div className="flex items-start gap-4 mb-5">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isDanger ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'
+            }`}>
+              {isDanger
+                ? <Trash2 className="w-4 h-4 text-red-500" />
+                : <AlertTriangle className="w-4 h-4 text-amber-500" />
+              }
+            </div>
+            <div className="flex-1 pt-0.5">
+              <h3 className="font-bold text-ink text-base leading-tight">{title}</h3>
+              <p className="text-sm text-ink-2 mt-1 leading-relaxed">{message}</p>
+            </div>
+            <button onClick={() => onResolve(false)} className="btn-ghost p-1.5 rounded-lg text-ink-3 flex-shrink-0 -mt-1 -mr-1">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 pt-0.5">
-            <h3 className="font-semibold text-white text-base leading-tight">{title}</h3>
-            <p className="text-slate-400 text-sm mt-1 leading-relaxed">{message}</p>
+          <div className="flex gap-2.5">
+            <button onClick={() => onResolve(false)} className="btn-secondary flex-1">
+              {cancelLabel}
+            </button>
+            <button
+              onClick={() => onResolve(true)}
+              autoFocus
+              className={`flex-1 btn ${isDanger
+                ? 'bg-red-500 hover:bg-red-400 text-white'
+                : 'bg-amber-500 hover:bg-amber-400 text-white'
+              }`}
+            >
+              {confirmLabel}
+            </button>
           </div>
-          <button
-            onClick={() => onResolve(false)}
-            className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors -mt-1 -mr-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex gap-2.5">
-          <button onClick={() => onResolve(false)} className="btn-secondary flex-1">
-            {cancelLabel}
-          </button>
-          <button
-            onClick={() => onResolve(true)}
-            autoFocus
-            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isDanger
-                ? 'bg-red-600 hover:bg-red-500 text-white'
-                : 'bg-amber-600 hover:bg-amber-500 text-white'
-            }`}
-          >
-            {confirmLabel}
-          </button>
         </div>
       </div>
     </div>
   );
 }
 
+/* ── Prompt Dialog ────────────────────────────────────────────── */
 function PromptDialog({ state, onResolve }: { state: PromptState; onResolve: (v: string | null) => void }) {
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,79 +114,74 @@ function PromptDialog({ state, onResolve }: { state: PromptState; onResolve: (v:
 
   useEffect(() => {
     if (!state) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onResolve(null);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onResolve(null); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, [state, onResolve]);
 
   if (!state) return null;
 
   const { title, label, placeholder, icon } = state.opts;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (value.trim()) onResolve(value.trim());
-  };
-
   const Icon = icon === 'youtube' ? YoutubeIcon : LinkIcon;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => onResolve(null)}>
-      <div className="card w-full max-w-sm shadow-2xl border-slate-700" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-full bg-brand-500/15 flex items-center justify-center flex-shrink-0">
-            <Icon className="w-5 h-5 text-brand-400" />
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-canvas/70 backdrop-blur-md animate-fade-in"
+      onClick={() => onResolve(null)}
+    >
+      <div
+        className="card w-full max-w-sm shadow-modal animate-slide-up"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center flex-shrink-0">
+              <Icon className="w-4 h-4 text-brand-500" />
+            </div>
+            <h3 className="font-bold text-ink text-base flex-1">{title}</h3>
+            <button onClick={() => onResolve(null)} className="btn-ghost p-1.5 rounded-lg text-ink-3">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <h3 className="font-semibold text-white text-base">{title}</h3>
-          <button
-            onClick={() => onResolve(null)}
-            className="ml-auto text-slate-500 hover:text-slate-300 transition-colors"
+          <form
+            onSubmit={e => { e.preventDefault(); if (value.trim()) onResolve(value.trim()); }}
+            className="space-y-4"
           >
-            <X className="w-4 h-4" />
-          </button>
+            <div>
+              {label && <label className="label">{label}</label>}
+              <input
+                ref={inputRef}
+                className="input"
+                placeholder={placeholder}
+                value={value}
+                onChange={e => setValue(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2.5">
+              <button type="button" onClick={() => onResolve(null)} className="btn-secondary flex-1">
+                Cancel
+              </button>
+              <button type="submit" disabled={!value.trim()} className="btn-primary flex-1">
+                Insert
+              </button>
+            </div>
+          </form>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            {label && <label className="label">{label}</label>}
-            <input
-              ref={inputRef}
-              className="input"
-              placeholder={placeholder}
-              value={value}
-              onChange={e => setValue(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2.5">
-            <button type="button" onClick={() => onResolve(null)} className="btn-secondary flex-1">
-              Cancel
-            </button>
-            <button type="submit" disabled={!value.trim()} className="btn-primary flex-1">
-              Insert
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );
 }
 
+/* ── Provider ─────────────────────────────────────────────────── */
 export function DialogProvider({ children }: { children: React.ReactNode }) {
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
-  const [promptState, setPromptState] = useState<PromptState>(null);
+  const [promptState,  setPromptState]  = useState<PromptState>(null);
 
-  const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
-    return new Promise(resolve => {
-      setConfirmState({ opts, resolve });
-    });
-  }, []);
+  const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> =>
+    new Promise(resolve => setConfirmState({ opts, resolve })), []);
 
-  const prompt = useCallback((opts: PromptOptions): Promise<string | null> => {
-    return new Promise(resolve => {
-      setPromptState({ opts, resolve });
-    });
-  }, []);
+  const prompt = useCallback((opts: PromptOptions): Promise<string | null> =>
+    new Promise(resolve => setPromptState({ opts, resolve })), []);
 
   const handleConfirmResolve = useCallback((v: boolean) => {
     confirmState?.resolve(v);
@@ -194,7 +197,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
     <DialogContext.Provider value={{ confirm, prompt }}>
       {children}
       <ConfirmDialog state={confirmState} onResolve={handleConfirmResolve} />
-      <PromptDialog state={promptState} onResolve={handlePromptResolve} />
+      <PromptDialog  state={promptState}  onResolve={handlePromptResolve} />
     </DialogContext.Provider>
   );
 }

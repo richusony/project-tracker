@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Save, Edit2, X } from 'lucide-react';
+import { ChevronLeft, Save, Edit2, X, Check } from 'lucide-react';
 import { getNote, updateNote } from '../api';
 import { INote } from '../types';
 import RichTextEditor from '../components/RichTextEditor';
@@ -14,7 +14,7 @@ export default function NoteDetail() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState('');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!noteId) return;
@@ -22,7 +22,6 @@ export default function NoteDetail() {
       setNote(n);
       setTitle(n.title);
       setContent(n.content);
-      // Auto-enter edit mode for new empty notes
       if (!n.content) setEditing(true);
     }).finally(() => setLoading(false));
   }, [noteId]);
@@ -34,11 +33,9 @@ export default function NoteDetail() {
       const updated = await updateNote(noteId, { title, content });
       setNote(updated);
       setEditing(false);
-      setSaveMsg('Saved!');
-      setTimeout(() => setSaveMsg(''), 2000);
-    } finally {
-      setSaving(false);
-    }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally { setSaving(false); }
   };
 
   const handleCancel = () => {
@@ -48,52 +45,69 @@ export default function NoteDetail() {
     setEditing(false);
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" /></div>;
-  if (!note) return <div className="text-center py-20 text-slate-400">Note not found.</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (!note) return <div className="text-center py-20 text-ink-2">Note not found.</div>;
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <Link to={`/projects/${id}/notes`} className="text-slate-400 hover:text-white transition-colors">
-          <ChevronLeft className="w-5 h-5" />
+    <div className="animate-fade-in">
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-6">
+        <Link to={`/projects/${id}/notes`} className="btn-ghost p-2 rounded-xl mt-0.5 flex-shrink-0">
+          <ChevronLeft className="w-4 h-4" />
         </Link>
+
         <div className="flex-1 min-w-0">
           {editing ? (
             <input
-              className="input text-xl font-bold bg-transparent border-none px-0 focus:ring-0"
+              className="input text-xl font-bold py-1 px-2 rounded-lg mb-1"
               value={title}
               onChange={e => setTitle(e.target.value)}
+              placeholder="Note title"
             />
           ) : (
-            <h1 className="text-2xl font-bold text-white truncate">{note.title}</h1>
+            <h1 className="text-2xl font-bold text-ink tracking-tight">{note.title}</h1>
           )}
-          <div className="text-xs text-slate-500 mt-1 space-x-3">
-            <span>Created {format(new Date(note.createdAt), 'MMM d, yyyy · h:mm a')}</span>
+          <p className="text-xs text-ink-3 mt-1">
+            Created {format(new Date(note.createdAt), 'MMM d, yyyy · h:mm a')}
             {note.updatedAt !== note.createdAt && (
-              <span>· Updated {format(new Date(note.updatedAt), 'MMM d, yyyy · h:mm a')}</span>
+              <> · Updated {format(new Date(note.updatedAt), 'MMM d, yyyy · h:mm a')}</>
             )}
-          </div>
+          </p>
         </div>
+
+        {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {saveMsg && <span className="text-green-400 text-sm">{saveMsg}</span>}
+          {saved && (
+            <span className="flex items-center gap-1.5 text-xs text-emerald-500 font-medium animate-fade-in">
+              <Check className="w-3.5 h-3.5" /> Saved
+            </span>
+          )}
           {editing ? (
             <>
-              <button onClick={handleCancel} className="btn-secondary flex items-center gap-1.5">
+              <button onClick={handleCancel} className="btn-secondary gap-1.5">
                 <X className="w-4 h-4" /> Cancel
               </button>
-              <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-1.5">
-                <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}
+              <button onClick={handleSave} disabled={saving} className="btn-primary gap-1.5">
+                <Save className="w-4 h-4" />
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </>
           ) : (
-            <button onClick={() => setEditing(true)} className="btn-secondary flex items-center gap-1.5">
+            <button onClick={() => setEditing(true)} className="btn-secondary gap-1.5">
               <Edit2 className="w-4 h-4" /> Edit
             </button>
           )}
         </div>
       </div>
 
-      <RichTextEditor content={content} onChange={setContent} editable={editing} />
+      {/* Editor */}
+      <div className="card overflow-hidden">
+        <RichTextEditor content={content} onChange={setContent} editable={editing} />
+      </div>
     </div>
   );
 }

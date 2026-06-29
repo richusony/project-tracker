@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -18,21 +18,34 @@ interface Props {
   editable?: boolean;
 }
 
-function ToolbarBtn({ onClick, active, title, children }: { onClick: () => void; active?: boolean; title: string; children: React.ReactNode }) {
+function ToolbarBtn({
+  onClick, active, title, children,
+}: {
+  onClick: () => void; active?: boolean; title: string; children: React.ReactNode;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded transition-colors ${active ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+      className={`p-1.5 rounded-lg transition-all duration-100 ${
+        active
+          ? 'bg-brand-500/15 text-brand-500'
+          : 'text-ink-2 hover:text-ink hover:bg-surface-2'
+      }`}
     >
       {children}
     </button>
   );
 }
 
+function Separator() {
+  return <div className="w-px h-5 bg-stroke self-center mx-0.5" />;
+}
+
 export default function RichTextEditor({ content, onChange, editable = true }: Props) {
   const { prompt } = useDialog();
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: false }),
@@ -53,28 +66,28 @@ export default function RichTextEditor({ content, onChange, editable = true }: P
   if (!editor) return null;
 
   const addLink = async () => {
-    const url = await prompt({ title: 'Insert Link', label: 'URL', placeholder: 'https://...', icon: 'link' });
+    const url = await prompt({ title: 'Insert Link', label: 'URL', placeholder: 'https://…', icon: 'link' });
     if (!url) return;
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
   const addYoutube = async () => {
-    const url = await prompt({ title: 'Embed YouTube Video', label: 'YouTube URL', placeholder: 'https://youtube.com/watch?v=...', icon: 'youtube' });
+    const url = await prompt({ title: 'Embed YouTube Video', label: 'YouTube URL', placeholder: 'https://youtube.com/watch?v=…', icon: 'youtube' });
     if (!url) return;
     editor.commands.setYoutubeVideo({ src: url });
   };
 
   return (
-    <div className="border border-slate-700 rounded-xl overflow-hidden">
+    <div className="overflow-hidden">
       {editable && (
-        <div className="flex flex-wrap gap-1 p-2 bg-slate-800 border-b border-slate-700">
+        <div className="flex flex-wrap items-center gap-0.5 p-2 bg-surface-2 border-b border-stroke">
           <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
             <Bold className="w-4 h-4" />
           </ToolbarBtn>
           <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Italic">
             <Italic className="w-4 h-4" />
           </ToolbarBtn>
-          <div className="w-px bg-slate-700 mx-1" />
+          <Separator />
           <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="Heading 1">
             <Heading1 className="w-4 h-4" />
           </ToolbarBtn>
@@ -84,33 +97,33 @@ export default function RichTextEditor({ content, onChange, editable = true }: P
           <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Heading 3">
             <Heading3 className="w-4 h-4" />
           </ToolbarBtn>
-          <div className="w-px bg-slate-700 mx-1" />
+          <Separator />
           <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Bullet List">
             <List className="w-4 h-4" />
           </ToolbarBtn>
           <ToolbarBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Ordered List">
             <ListOrdered className="w-4 h-4" />
           </ToolbarBtn>
-          <div className="w-px bg-slate-700 mx-1" />
+          <Separator />
           <ToolbarBtn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Blockquote">
             <Quote className="w-4 h-4" />
           </ToolbarBtn>
           <ToolbarBtn onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Inline Code">
             <Code className="w-4 h-4" />
           </ToolbarBtn>
-          <ToolbarBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
+          <ToolbarBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Divider">
             <Minus className="w-4 h-4" />
           </ToolbarBtn>
-          <div className="w-px bg-slate-700 mx-1" />
+          <Separator />
           <ToolbarBtn onClick={addLink} active={editor.isActive('link')} title="Insert Link">
             <LinkIcon className="w-4 h-4" />
           </ToolbarBtn>
-          <ToolbarBtn onClick={addYoutube} active={false} title="Embed YouTube Video">
+          <ToolbarBtn onClick={addYoutube} active={false} title="Embed YouTube">
             <YoutubeIcon className="w-4 h-4" />
           </ToolbarBtn>
         </div>
       )}
-      <div className="p-4 bg-slate-900 min-h-[200px]">
+      <div className="p-5 bg-surface">
         <EditorContent editor={editor} />
       </div>
     </div>

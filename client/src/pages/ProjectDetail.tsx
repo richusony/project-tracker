@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, FileText, FileCode, KeyRound, DollarSign, Clock, Pencil, Check, X, Trash2 } from 'lucide-react';
+import {
+  ChevronLeft, FileText, FileCode, KeyRound, DollarSign,
+  Timer as TimerIcon, Pencil, Check, X, Archive,
+} from 'lucide-react';
 import { getProject, updateProject, deleteProject } from '../api';
 import { IProject } from '../types';
 import Timer from '../components/Timer';
@@ -12,16 +15,21 @@ import { useDialog } from '../components/DialogProvider';
 type Tab = 'timer' | 'notes' | 'config' | 'env' | 'pricing';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'timer', label: 'Timer', icon: <Clock className="w-4 h-4" /> },
-  { id: 'notes', label: 'Notes', icon: <FileText className="w-4 h-4" /> },
-  { id: 'config', label: 'Config Files', icon: <FileCode className="w-4 h-4" /> },
-  { id: 'env', label: 'Env Vars', icon: <KeyRound className="w-4 h-4" /> },
-  { id: 'pricing', label: 'Pricing', icon: <DollarSign className="w-4 h-4" /> },
+  { id: 'timer',   label: 'Timer',        icon: <TimerIcon className="w-4 h-4" /> },
+  { id: 'notes',   label: 'Notes',        icon: <FileText className="w-4 h-4" /> },
+  { id: 'config',  label: 'Config Files', icon: <FileCode className="w-4 h-4" /> },
+  { id: 'env',     label: 'Env Vars',     icon: <KeyRound className="w-4 h-4" /> },
+  { id: 'pricing', label: 'Pricing',      icon: <DollarSign className="w-4 h-4" /> },
 ];
+
+function Spinner() {
+  return <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />;
+}
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { confirm } = useDialog();
   const [project, setProject] = useState<IProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('timer');
@@ -32,7 +40,6 @@ export default function ProjectDetail() {
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const briefRef = useRef<HTMLInputElement>(null);
-  const { confirm } = useDialog();
 
   useEffect(() => {
     if (!id) return;
@@ -55,132 +62,181 @@ export default function ProjectDetail() {
 
   const saveTitle = async () => {
     if (!project || !draftName.trim() || draftName.trim() === project.name) {
-      setEditingTitle(false);
-      return;
+      setEditingTitle(false); return;
     }
     setSaving(true);
     try {
-      const updated = await updateProject(project._id, { name: draftName.trim() });
-      setProject(updated);
-    } finally {
-      setSaving(false);
-      setEditingTitle(false);
-    }
+      setProject(await updateProject(project._id, { name: draftName.trim() }));
+    } finally { setSaving(false); setEditingTitle(false); }
   };
 
-  const handleDelete = async () => {
+  const saveBrief = async () => {
+    if (!project || draftBrief === (project.brief ?? '')) {
+      setEditingBrief(false); return;
+    }
+    setSaving(true);
+    try {
+      setProject(await updateProject(project._id, { brief: draftBrief.trim() }));
+    } finally { setSaving(false); setEditingBrief(false); }
+  };
+
+  const handleArchive = async () => {
     if (!project) return;
-    const ok = await confirm({ title: 'Move to Archives', message: `Move "${project.name}" to archives?`, confirmLabel: 'Move to Archives', variant: 'warning' });
+    const ok = await confirm({
+      title: 'Move to Archives',
+      message: `Move "${project.name}" to archives?`,
+      confirmLabel: 'Move to Archives',
+      variant: 'warning',
+    });
     if (!ok) return;
     await deleteProject(project._id);
     navigate('/');
   };
 
-  const saveBrief = async () => {
-    if (!project || draftBrief === (project.brief ?? '')) {
-      setEditingBrief(false);
-      return;
-    }
-    setSaving(true);
-    try {
-      const updated = await updateProject(project._id, { brief: draftBrief.trim() });
-      setProject(updated);
-    } finally {
-      setSaving(false);
-      setEditingBrief(false);
-    }
-  };
-
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" /></div>;
-  if (!project) return <div className="text-center py-20 text-slate-400">Project not found.</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64"><Spinner /></div>
+  );
+  if (!project) return (
+    <div className="text-center py-20 text-ink-2">Project not found.</div>
+  );
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <Link to="/" className="text-slate-400 hover:text-white transition-colors">
-          <ChevronLeft className="w-5 h-5" />
+    <div className="animate-fade-in">
+      {/* ── Breadcrumb + Header ── */}
+      <div className="mb-6">
+        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink transition-colors mb-4">
+          <ChevronLeft className="w-4 h-4" />
+          All Projects
         </Link>
-        <div className="space-y-0.5 flex-1">
-          {editingTitle ? (
-            <div className="flex items-center gap-1.5">
-              <input
-                ref={titleRef}
-                className="input text-xl font-bold py-0.5 px-2 h-auto"
-                value={draftName}
-                onChange={e => setDraftName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
-                disabled={saving}
-              />
-              <button onClick={saveTitle} disabled={saving || !draftName.trim()} className="text-brand-400 hover:text-brand-300 disabled:opacity-40"><Check className="w-4 h-4" /></button>
-              <button onClick={() => setEditingTitle(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-          ) : (
-            <div className="group flex items-center gap-1.5">
-              <h1 className="text-2xl font-bold text-white">{project.name}</h1>
-              <button onClick={startEditTitle} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-slate-300"><Pencil className="w-3.5 h-3.5" /></button>
-            </div>
-          )}
-          {editingBrief ? (
-            <div className="flex items-center gap-1.5">
-              <input
-                ref={briefRef}
-                className="input text-sm py-0.5 px-2 h-auto text-slate-300"
-                value={draftBrief}
-                placeholder="Add a description…"
-                onChange={e => setDraftBrief(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveBrief(); if (e.key === 'Escape') setEditingBrief(false); }}
-                disabled={saving}
-              />
-              <button onClick={saveBrief} disabled={saving} className="text-brand-400 hover:text-brand-300 disabled:opacity-40"><Check className="w-4 h-4" /></button>
-              <button onClick={() => setEditingBrief(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-          ) : (
-            <div className="group flex items-center gap-1.5">
-              <p className="text-slate-400 text-sm">{project.brief || <span className="italic text-slate-600">No description</span>}</p>
-              <button onClick={startEditBrief} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-slate-300"><Pencil className="w-3 h-3" /></button>
-            </div>
-          )}
+
+        <div className="flex items-start justify-between gap-4">
+          {/* Title + Brief */}
+          <div className="flex-1 min-w-0 space-y-1">
+            {editingTitle ? (
+              <div className="flex items-center gap-2">
+                <input
+                  ref={titleRef}
+                  className="input text-xl font-bold py-1 px-2 h-auto rounded-lg"
+                  value={draftName}
+                  onChange={e => setDraftName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
+                  disabled={saving}
+                />
+                <button onClick={saveTitle} disabled={saving || !draftName.trim()} className="btn-ghost p-1.5 text-brand-500">
+                  <Check className="w-4 h-4" />
+                </button>
+                <button onClick={() => setEditingTitle(false)} className="btn-ghost p-1.5 text-ink-3">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="group flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-ink tracking-tight">{project.name}</h1>
+                <button
+                  onClick={startEditTitle}
+                  className="opacity-0 group-hover:opacity-100 btn-ghost p-1 text-ink-3 hover:text-ink-2 transition-all"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {editingBrief ? (
+              <div className="flex items-center gap-2">
+                <input
+                  ref={briefRef}
+                  className="input text-sm py-1 px-2 h-auto rounded-lg text-ink-2"
+                  value={draftBrief}
+                  placeholder="Add a description…"
+                  onChange={e => setDraftBrief(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveBrief(); if (e.key === 'Escape') setEditingBrief(false); }}
+                  disabled={saving}
+                />
+                <button onClick={saveBrief} disabled={saving} className="btn-ghost p-1.5 text-brand-500">
+                  <Check className="w-4 h-4" />
+                </button>
+                <button onClick={() => setEditingBrief(false)} className="btn-ghost p-1.5 text-ink-3">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="group flex items-center gap-2">
+                <p className="text-sm text-ink-2">
+                  {project.brief || <span className="text-ink-3 italic">No description — click to add</span>}
+                </p>
+                <button
+                  onClick={startEditBrief}
+                  className="opacity-0 group-hover:opacity-100 btn-ghost p-1 text-ink-3 hover:text-ink-2 transition-all"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Archive button */}
+          <button
+            onClick={handleArchive}
+            className="btn-secondary gap-2 flex-shrink-0 text-ink-2 hover:text-amber-500"
+            title="Move to archives"
+          >
+            <Archive className="w-4 h-4" />
+            <span className="hidden sm:block">Archive</span>
+          </button>
         </div>
-        <button
-          onClick={handleDelete}
-          className="ml-auto text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
-          title="Move to archives"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 overflow-x-auto bg-slate-900 border border-slate-800 rounded-xl p-1">
-        {TABS.map(t =>
-          t.id === 'notes' ? (
-            <Link
-              key={t.id}
-              to={`/projects/${id}/notes`}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-1 justify-center tab-inactive"
-            >
-              {t.icon} {t.label}
-            </Link>
-          ) : (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-1 justify-center ${
-                tab === t.id ? 'tab-active' : 'tab-inactive'
-              }`}
-            >
-              {t.icon} {t.label}
-            </button>
-          )
-        )}
-      </div>
+      {/* ── Layout: Sidebar (lg) + Content ── */}
+      <div className="flex flex-col lg:flex-row gap-6">
 
-      {/* Tab content */}
-      <div className="max-w-2xl">
-        {tab === 'timer' && <Timer project={project} onUpdate={setProject} />}
-        {tab === 'config' && <ConfigFiles project={project} onUpdate={setProject} />}
-        {tab === 'env' && <EnvVariables project={project} onUpdate={setProject} />}
-        {tab === 'pricing' && <Pricing project={project} onUpdate={setProject} />}
+        {/* Sidebar tabs (desktop) / Scrollable tabs (mobile) */}
+        <aside className="flex-shrink-0 lg:w-48">
+          {/* Mobile: horizontal scroll */}
+          <div className="flex lg:hidden gap-1 overflow-x-auto pb-1 tab-bar">
+            {TABS.map(t =>
+              t.id === 'notes' ? (
+                <Link key={t.id} to={`/projects/${id}/notes`} className="tab-inactive">
+                  {t.icon} {t.label}
+                </Link>
+              ) : (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={tab === t.id ? 'tab-active' : 'tab-inactive'}
+                >
+                  {t.icon} {t.label}
+                </button>
+              )
+            )}
+          </div>
+
+          {/* Desktop: vertical sidebar */}
+          <nav className="hidden lg:flex flex-col gap-1">
+            {TABS.map(t =>
+              t.id === 'notes' ? (
+                <Link key={t.id} to={`/projects/${id}/notes`} className="stab-inactive">
+                  {t.icon} {t.label}
+                </Link>
+              ) : (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={tab === t.id ? 'stab-active' : 'stab-inactive'}
+                >
+                  {t.icon} {t.label}
+                </button>
+              )
+            )}
+          </nav>
+        </aside>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 animate-fade-in" key={tab}>
+          {tab === 'timer'   && <Timer project={project} onUpdate={setProject} />}
+          {tab === 'config'  && <ConfigFiles project={project} onUpdate={setProject} />}
+          {tab === 'env'     && <EnvVariables project={project} onUpdate={setProject} />}
+          {tab === 'pricing' && <Pricing project={project} onUpdate={setProject} />}
+        </div>
       </div>
     </div>
   );
