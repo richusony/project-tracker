@@ -57,7 +57,7 @@ A full-stack personal project management tool built to track everything that mat
 - **Fixed Price** supports advance and final payment blocks, each with "Mark as Received" and a calendar date picker
 - **Hourly Rate** supports individual payment entries with descriptions, each markable as received
 - **8 currencies:** USD, EUR, GBP, AED, SGD, AUD, CAD, INR
-- **Live INR conversion** — any non-INR amount shows the equivalent in Indian Rupees using a real-time exchange rate
+- **Live INR conversion** — any non-INR amount shows the equivalent in Indian Rupees using the current daily exchange rate (sourced from open.er-api.com with exchangerate-api.com as fallback); the rate date is displayed and a one-click refresh button re-fetches the latest rate on demand
 
 ### Archives
 - Archive any project instead of permanently deleting it (soft delete)
