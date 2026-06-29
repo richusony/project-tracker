@@ -26,6 +26,7 @@
     "react-router-dom": "^6.24.0"
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
     "@types/react": "^18.3.3",
     "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "^18.3.0",
