@@ -4,6 +4,7 @@ import { Plus, Clock, Folder, Trash2, ChevronRight } from 'lucide-react';
 import { getProjects, deleteProject } from '../api';
 import { IProject } from '../types';
 import AddProjectModal from '../components/AddProjectModal';
+import { useDialog } from '../components/DialogProvider';
 import { format } from 'date-fns';
 
 function formatSeconds(totalSeconds: number, isRunning: boolean, lastStarted?: string) {
@@ -23,6 +24,7 @@ function formatSeconds(totalSeconds: number, isRunning: boolean, lastStarted?: s
 
 function ProjectCard({ project, onDelete }: { project: IProject; onDelete: () => void }) {
   const [tick, setTick] = useState(0);
+  const { confirm } = useDialog();
 
   useEffect(() => {
     if (!project.timer.isRunning) return;
@@ -32,7 +34,8 @@ function ProjectCard({ project, onDelete }: { project: IProject; onDelete: () =>
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!window.confirm(`Move "${project.name}" to trash?`)) return;
+    const ok = await confirm({ title: 'Move to Archives', message: `Move "${project.name}" to archives?`, confirmLabel: 'Move to Archives', variant: 'warning' });
+    if (!ok) return;
     await deleteProject(project._id);
     onDelete();
   };

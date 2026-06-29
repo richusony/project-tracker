@@ -7,6 +7,7 @@ import Timer from '../components/Timer';
 import ConfigFiles from '../components/ConfigFiles';
 import EnvVariables from '../components/EnvVariables';
 import Pricing from '../components/Pricing';
+import { useDialog } from '../components/DialogProvider';
 
 type Tab = 'timer' | 'notes' | 'config' | 'env' | 'pricing';
 
@@ -31,6 +32,7 @@ export default function ProjectDetail() {
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const briefRef = useRef<HTMLInputElement>(null);
+  const { confirm } = useDialog();
 
   useEffect(() => {
     if (!id) return;
@@ -68,7 +70,8 @@ export default function ProjectDetail() {
 
   const handleDelete = async () => {
     if (!project) return;
-    if (!window.confirm(`Move "${project.name}" to trash?`)) return;
+    const ok = await confirm({ title: 'Move to Archives', message: `Move "${project.name}" to archives?`, confirmLabel: 'Move to Archives', variant: 'warning' });
+    if (!ok) return;
     await deleteProject(project._id);
     navigate('/');
   };
@@ -141,7 +144,7 @@ export default function ProjectDetail() {
         <button
           onClick={handleDelete}
           className="ml-auto text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
-          title="Move to trash"
+          title="Move to archives"
         >
           <Trash2 className="w-4 h-4" />
         </button>

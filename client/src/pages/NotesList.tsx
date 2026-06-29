@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Plus, FileText, ChevronLeft, Trash2 } from 'lucide-react';
 import { getNotesByProject, getProject, createNote, deleteNote } from '../api';
 import { INote, IProject } from '../types';
+import { useDialog } from '../components/DialogProvider';
 import { format } from 'date-fns';
 
 export default function NotesList() {
@@ -13,6 +14,7 @@ export default function NotesList() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const { confirm } = useDialog();
 
   useEffect(() => {
     if (!id) return;
@@ -29,7 +31,8 @@ export default function NotesList() {
   };
 
   const handleDelete = async (noteId: string) => {
-    if (!window.confirm('Delete this note?')) return;
+    const ok = await confirm({ title: 'Delete Note', message: 'Delete this note? This cannot be undone.', confirmLabel: 'Delete', variant: 'danger' });
+    if (!ok) return;
     await deleteNote(noteId);
     setNotes(prev => prev.filter(n => n._id !== noteId));
   };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FileCode, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { addConfigFile, deleteConfigFile } from '../api';
 import { IProject, IConfigFile } from '../types';
+import { useDialog } from './DialogProvider';
 import { format } from 'date-fns';
 
 interface Props {
@@ -12,9 +13,11 @@ interface Props {
 function FileItem({ file, projectId, onDelete }: { file: IConfigFile; projectId: string; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const { confirm } = useDialog();
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this file?')) return;
+    const ok = await confirm({ title: 'Delete File', message: `Delete "${file.path}"? This cannot be undone.`, confirmLabel: 'Delete', variant: 'danger' });
+    if (!ok) return;
     setDeleting(true);
     try { await deleteConfigFile(projectId, file._id); onDelete(); }
     finally { setDeleting(false); }

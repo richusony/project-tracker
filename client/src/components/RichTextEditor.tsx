@@ -10,6 +10,7 @@ import {
   Link as LinkIcon, Youtube as YoutubeIcon, Code, Quote,
   ListOrdered, Minus,
 } from 'lucide-react';
+import { useDialog } from './DialogProvider';
 
 interface Props {
   content: string;
@@ -31,6 +32,7 @@ function ToolbarBtn({ onClick, active, title, children }: { onClick: () => void;
 }
 
 export default function RichTextEditor({ content, onChange, editable = true }: Props) {
+  const { prompt } = useDialog();
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: false }),
@@ -50,14 +52,14 @@ export default function RichTextEditor({ content, onChange, editable = true }: P
 
   if (!editor) return null;
 
-  const addLink = () => {
-    const url = window.prompt('Enter URL:');
+  const addLink = async () => {
+    const url = await prompt({ title: 'Insert Link', label: 'URL', placeholder: 'https://...', icon: 'link' });
     if (!url) return;
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
-  const addYoutube = () => {
-    const url = window.prompt('Enter YouTube URL:');
+  const addYoutube = async () => {
+    const url = await prompt({ title: 'Embed YouTube Video', label: 'YouTube URL', placeholder: 'https://youtube.com/watch?v=...', icon: 'youtube' });
     if (!url) return;
     editor.commands.setYoutubeVideo({ src: url });
   };

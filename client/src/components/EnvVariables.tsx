@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { KeyRound, Plus, Trash2, Eye, EyeOff, GitBranch, Layers, Settings, ClipboardPaste } from 'lucide-react';
 import { addEnvVariable, deleteEnvVariable, updateProject } from '../api';
 import { IProject, IEnvVariable } from '../types';
+import { useDialog } from './DialogProvider';
 
 function parseDotEnv(raw: string): { key: string; value: string }[] {
   const results: { key: string; value: string }[] = [];
@@ -43,6 +44,7 @@ function EnvRow({
   showScope: boolean;
 }) {
   const [show, setShow] = useState(false);
+  const { confirm } = useDialog();
 
   return (
     <div className="flex items-center gap-3 bg-slate-800 rounded-lg px-3 py-2.5 group">
@@ -71,8 +73,9 @@ function EnvRow({
       </button>
       <button
         onClick={async () => {
-          if (!window.confirm('Delete this variable?')) return;
-          const u = await deleteEnvVariable(projectId, v._id);
+          const ok = await confirm({ title: 'Delete Variable', message: `Delete "${v.key}"? This cannot be undone.`, confirmLabel: 'Delete', variant: 'danger' });
+          if (!ok) return;
+          await deleteEnvVariable(projectId, v._id);
           onDelete();
         }}
         className="text-slate-500 hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"

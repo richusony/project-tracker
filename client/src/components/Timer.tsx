@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Square, Timer as TimerIcon } from 'lucide-react';
 import { startTimer, pauseTimer, stopTimer } from '../api';
 import { IProject } from '../types';
+import { useDialog } from './DialogProvider';
 
 interface Props {
   project: IProject;
@@ -27,6 +28,7 @@ function formatTime(totalSeconds: number) {
 export default function Timer({ project, onUpdate }: Props) {
   const [seconds, setSeconds] = useState(() => getLiveSeconds(project));
   const [loading, setLoading] = useState(false);
+  const { confirm } = useDialog();
 
   useEffect(() => {
     setSeconds(getLiveSeconds(project));
@@ -95,7 +97,10 @@ export default function Timer({ project, onUpdate }: Props) {
           </button>
         )}
         <button
-          onClick={() => { if (window.confirm('Stop and reset timer?')) handle('stop'); }}
+          onClick={async () => {
+            const ok = await confirm({ title: 'Reset Timer', message: 'Stop and reset the timer? This cannot be undone.', confirmLabel: 'Reset', variant: 'danger' });
+            if (ok) handle('stop');
+          }}
           disabled={loading || seconds === 0}
           className="btn-danger flex items-center gap-2 px-3"
           title="Stop & Reset"

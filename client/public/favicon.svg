@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Dark rounded background -->
+  <rect width="32" height="32" rx="7" fill="#0f172a"/>
+
+  <!-- Folder shape (sky blue) -->
+  <path
+    d="M3 25 Q3 27 5 27 L27 27 Q29 27 29 25 L29 13 Q29 11 27 11 L15 11 L13 8 L5 8 Q3 8 3 10 Z"
+    fill="#0ea5e9"
+  />
+
+  <!-- Kanban column bars (white, different heights, bottom-aligned at y=24) -->
+  <rect x="7"  y="17" width="4" height="7" rx="1.5" fill="white" opacity="0.92"/>
+  <rect x="14" y="13" width="4" height="11" rx="1.5" fill="white" opacity="0.92"/>
+  <rect x="21" y="19" width="4" height="5" rx="1.5" fill="white" opacity="0.92"/>
+</svg>
