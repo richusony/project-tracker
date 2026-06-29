@@ -1,7 +1,30 @@
 import { useState } from 'react';
-import { KeyRound, Plus, Trash2, Eye, EyeOff, GitBranch, Layers, Settings } from 'lucide-react';
+import { KeyRound, Plus, Trash2, Eye, EyeOff, GitBranch, Layers, Settings, ClipboardPaste } from 'lucide-react';
 import { addEnvVariable, deleteEnvVariable, updateProject } from '../api';
 import { IProject, IEnvVariable } from '../types';
+
+function parseDotEnv(raw: string): { key: string; value: string }[] {
+  const results: { key: string; value: string }[] = [];
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    if (!key) continue;
+    let val = trimmed.slice(eqIdx + 1).trim();
+    // Strip surrounding quotes
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    } else {
+      // Strip inline comments (only for unquoted values)
+      const commentIdx = val.indexOf(' #');
+      if (commentIdx !== -1) val = val.slice(0, commentIdx).trim();
+    }
+    results.push({ key, value: val });
+  }
+  return results;
+}
 
 interface Props {
   project: IProject;
@@ -98,8 +121,10 @@ type Scope = 'all' | 'client' | 'server';
 
 export default function EnvVariables({ project, onUpdate }: Props) {
   const [adding, setAdding] = useState(false);
+  const [addMode, setAddMode] = useState<'single' | 'paste'>('single');
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
+  const [pasteText, setPasteText] = useState('');
   const [scope, setScope] = useState<Scope>('all');
   const [loading, setLoading] = useState(false);
   const [changingType, setChangingType] = useState(false);
@@ -139,6 +164,36 @@ export default function EnvVariables({ project, onUpdate }: Props) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasteImport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const pairs = parseDotEnv(pasteText);
+    if (pairs.length === 0) return;
+    setLoading(true);
+    try {
+      let updated = project;
+      for (const pair of pairs) {
+        updated = await addEnvVariable(project._id, {
+          key: pair.key,
+          value: pair.value,
+          scope: isSingle ? 'all' : scope,
+        });
+      }
+      onUpdate(updated);
+      setPasteText('');
+      setAdding(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeAdding = () => {
+    setAdding(false);
+    setKey('');
+    setValue('');
+    setPasteText('');
+    setAddMode('single');
   };
 
   const handleDelete = async (varId: string) => {
@@ -212,7 +267,14 @@ export default function EnvVariables({ project, onUpdate }: Props) {
             <Settings className="w-4 h-4" />
           </button>
           <button
-            onClick={() => { setAdding(true); if (isMulti) setScope('client'); }}
+            onClick={() => { setAdding(true); setAddMode('paste'); if (isMulti) setScope('client'); }}
+            className="btn-secondary flex items-center gap-1.5 text-sm py-1.5"
+            title="Paste .env file"
+          >
+            <ClipboardPaste className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => { setAdding(true); setAddMode('single'); if (isMulti) setScope('client'); }}
             className="btn-primary flex items-center gap-1.5 text-sm py-1.5"
           >
             <Plus className="w-4 h-4" /> Add Variable
@@ -221,7 +283,30 @@ export default function EnvVariables({ project, onUpdate }: Props) {
       </div>
 
       {adding && (
-        <form onSubmit={handleAdd} className="card space-y-3 border-brand-500/30">
+        <div className="card space-y-3 border-brand-500/30">
+          {/* Mode tabs */}
+          <div className="flex gap-1 bg-slate-900 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => setAddMode('single')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                addMode === 'single' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5" /> Single
+            </button>
+            <button
+              type="button"
+              onClick={() => setAddMode('paste')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                addMode === 'paste' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              <ClipboardPaste className="w-3.5 h-3.5" /> Paste .env
+            </button>
+          </div>
+
+          {/* Scope selector (multi-repo only) */}
           {isMulti && (
             <div>
               <label className="label">Scope</label>
@@ -245,40 +330,75 @@ export default function EnvVariables({ project, onUpdate }: Props) {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Key</label>
-              <input
-                className="input font-mono text-sm"
-                placeholder="DATABASE_URL"
-                value={key}
-                onChange={e => setKey(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="label">Value</label>
-              <input
-                className="input font-mono text-sm"
-                placeholder="value"
-                value={value}
-                onChange={e => setValue(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => { setAdding(false); setKey(''); setValue(''); }}
-              className="btn-secondary flex-1"
-            >
-              Cancel
-            </button>
-            <button type="submit" disabled={!key.trim() || !value.trim() || loading} className="btn-primary flex-1">
-              {loading ? 'Saving...' : 'Add Variable'}
-            </button>
-          </div>
-        </form>
+
+          {addMode === 'single' ? (
+            <form onSubmit={handleAdd} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Key</label>
+                  <input
+                    className="input font-mono text-sm"
+                    placeholder="DATABASE_URL"
+                    value={key}
+                    onChange={e => setKey(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="label">Value</label>
+                  <input
+                    className="input font-mono text-sm"
+                    placeholder="value"
+                    value={value}
+                    onChange={e => setValue(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={closeAdding} className="btn-secondary flex-1">
+                  Cancel
+                </button>
+                <button type="submit" disabled={!key.trim() || !value.trim() || loading} className="btn-primary flex-1">
+                  {loading ? 'Saving...' : 'Add Variable'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handlePasteImport} className="space-y-3">
+              <div>
+                <label className="label">Paste your .env content</label>
+                <textarea
+                  className="input font-mono text-sm resize-none"
+                  rows={8}
+                  placeholder={'DATABASE_URL=postgres://...\nNEXT_PUBLIC_API_URL=https://...\n# comments and blank lines are ignored'}
+                  value={pasteText}
+                  onChange={e => setPasteText(e.target.value)}
+                  autoFocus
+                />
+                {pasteText.trim() && (() => {
+                  const count = parseDotEnv(pasteText).length;
+                  return (
+                    <p className="text-xs text-slate-500 mt-1">
+                      {count === 0 ? 'No valid variables detected.' : `${count} variable${count !== 1 ? 's' : ''} detected`}
+                    </p>
+                  );
+                })()}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={closeAdding} className="btn-secondary flex-1">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={parseDotEnv(pasteText).length === 0 || loading}
+                  className="btn-primary flex-1"
+                >
+                  {loading ? 'Importing...' : `Import ${parseDotEnv(pasteText).length > 0 ? parseDotEnv(pasteText).length : ''} Variable${parseDotEnv(pasteText).length !== 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
 
       {project.envVariables.length === 0 && !adding ? (
