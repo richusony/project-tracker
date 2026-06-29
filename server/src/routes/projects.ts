@@ -193,6 +193,7 @@ router.patch('/:id/pricing', async (req: Request, res: Response) => {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
     Object.assign(project.pricing, req.body);
+    project.markModified('pricing');
     await project.save();
     res.json(project);
   } catch (err) {
@@ -223,6 +224,7 @@ router.patch('/:id/pricing/hourly-payment/:payId', async (req: Request, res: Res
     const payment = project.pricing.hourlyPayments.find(p => p._id?.toString() === req.params.payId);
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
     Object.assign(payment, req.body);
+    project.markModified('pricing.hourlyPayments');
     await project.save();
     res.json(project);
   } catch (err) {
