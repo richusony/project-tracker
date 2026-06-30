@@ -19,6 +19,10 @@ function getLiveSeconds(p: IProject): number {
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
 
+function boldDigits(s: string) {
+  return s.replace(/\d/g, d => String.fromCodePoint(0x1D7CE + +d));
+}
+
 export default function Timer({ project, onUpdate }: Props) {
   const { confirm } = useDialog();
   const [seconds, setSeconds] = useState(() => getLiveSeconds(project));
@@ -29,6 +33,30 @@ export default function Timer({ project, onUpdate }: Props) {
     if (!project.timer.isRunning) return;
     const interval = setInterval(() => setSeconds(getLiveSeconds(project)), 1000);
     return () => clearInterval(interval);
+  }, [project]);
+
+  useEffect(() => {
+    if (!project.timer.isRunning) {
+      document.title = 'Project Tracker';
+      return;
+    }
+    const update = () => {
+      const s = getLiveSeconds(project);
+      const d = Math.floor(s / 86400);
+      const h = Math.floor((s % 86400) / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      const time = d > 0
+        ? `${pad(d)}:${pad(h)}:${pad(m)}:${pad(sec)}`
+        : `${pad(h)}:${pad(m)}:${pad(sec)}`;
+      document.title = `${boldDigits(time)} — ${project.name}`;
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => {
+      clearInterval(interval);
+      document.title = 'Project Tracker';
+    };
   }, [project]);
 
   const handle = useCallback(async (action: 'start' | 'pause' | 'stop') => {
