@@ -61,8 +61,13 @@ function ContactForm({ initial, onCancel, onSave }: {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+    // Include a link the user typed but didn't explicitly add via the "+" button.
+    const pending = linkUrl.trim()
+      ? [{ platform: linkPlatform, url: linkUrl.trim(), label: linkLabel.trim() || undefined }]
+      : [];
+    const finalForm = { ...form, meetingLinks: [...form.meetingLinks, ...pending] };
     setLoading(true);
-    try { await onSave(form); } finally { setLoading(false); }
+    try { await onSave(finalForm); } finally { setLoading(false); }
   };
 
   return (
