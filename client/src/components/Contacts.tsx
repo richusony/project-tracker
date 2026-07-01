@@ -103,12 +103,14 @@ function ContactForm({ initial, onCancel, onSave }: {
             placeholder="https://meet.google.com/…"
             value={linkUrl}
             onChange={e => setLinkUrl(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }}
           />
           <input
             className="input w-32"
             placeholder="Label (optional)"
             value={linkLabel}
             onChange={e => setLinkLabel(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }}
           />
           <button type="button" onClick={addLink} disabled={!linkUrl.trim()} className="btn-secondary p-2">
             <Plus className="w-4 h-4" />
