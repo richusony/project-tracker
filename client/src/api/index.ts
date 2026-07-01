@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { IProject, INote } from '../types';
+import { IProject, INote, IMeetingLink, IContact } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -38,6 +38,14 @@ export const addHourlyPayment = (id: string, data: { amount: number; description
   api.post<IProject>(`/projects/${id}/pricing/hourly-payment`, data).then(r => r.data);
 export const updateHourlyPayment = (id: string, payId: string, data: object) =>
   api.patch<IProject>(`/projects/${id}/pricing/hourly-payment/${payId}`, data).then(r => r.data);
+
+// Contacts
+export const addContact = (id: string, data: { name: string; role?: string; email?: string; phone?: string; meetingLinks?: Omit<IMeetingLink, '_id'>[]; notes?: string }) =>
+  api.post<IProject>(`/projects/${id}/contacts`, data).then(r => r.data);
+export const updateContact = (id: string, contactId: string, data: Partial<Omit<IContact, '_id' | 'createdAt' | 'meetingLinks'>> & { meetingLinks?: Omit<IMeetingLink, '_id'>[] }) =>
+  api.patch<IProject>(`/projects/${id}/contacts/${contactId}`, data).then(r => r.data);
+export const deleteContact = (id: string, contactId: string) =>
+  api.delete<IProject>(`/projects/${id}/contacts/${contactId}`).then(r => r.data);
 
 // Notes
 export const getNotesByProject = (projectId: string) =>

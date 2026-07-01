@@ -43,6 +43,24 @@ export interface ITimer {
   lastStarted?: Date;
 }
 
+export interface IMeetingLink {
+  _id?: mongoose.Types.ObjectId;
+  platform: 'google-meet' | 'zoom' | 'teams' | 'other';
+  label?: string;
+  url: string;
+}
+
+export interface IContact {
+  _id?: mongoose.Types.ObjectId;
+  name: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  meetingLinks: IMeetingLink[];
+  notes?: string;
+  createdAt: Date;
+}
+
 export interface IProject extends Document {
   name: string;
   brief?: string;
@@ -52,6 +70,7 @@ export interface IProject extends Document {
   configFiles: IConfigFile[];
   envVariables: IEnvVariable[];
   pricing: IPricing;
+  contacts: IContact[];
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -105,6 +124,23 @@ const ProjectSchema = new Schema<IProject>(
       },
     ],
     pricing: { type: PricingSchema, default: () => ({ type: 'none', currency: 'USD', advanceReceived: false, finalReceived: false, hourlyPayments: [] }) },
+    contacts: [
+      {
+        name: { type: String, required: true, trim: true },
+        role: { type: String, trim: true },
+        email: { type: String, trim: true },
+        phone: { type: String, trim: true },
+        meetingLinks: [
+          {
+            platform: { type: String, enum: ['google-meet', 'zoom', 'teams', 'other'], default: 'other' },
+            label: { type: String, trim: true },
+            url: { type: String, required: true, trim: true },
+          },
+        ],
+        notes: { type: String, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
     deletedAt: { type: Date },
   },
   { timestamps: true }

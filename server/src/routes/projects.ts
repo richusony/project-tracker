@@ -236,4 +236,53 @@ router.patch('/:id/pricing/hourly-payment/:payId', async (req: Request, res: Res
   }
 });
 
+// --- Contacts ---
+router.post('/:id/contacts', async (req: Request, res: Response) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    project.contacts.push({
+      name: req.body.name,
+      role: req.body.role,
+      email: req.body.email,
+      phone: req.body.phone,
+      meetingLinks: req.body.meetingLinks || [],
+      notes: req.body.notes,
+      createdAt: new Date(),
+    });
+    await project.save();
+    res.json(project);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to add contact' });
+  }
+});
+
+router.patch('/:id/contacts/:contactId', async (req: Request, res: Response) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    const contact = project.contacts.find(c => c._id?.toString() === req.params.contactId);
+    if (!contact) return res.status(404).json({ error: 'Contact not found' });
+    const { _id, ...contactData } = req.body;
+    Object.assign(contact, contactData);
+    project.markModified('contacts');
+    await project.save();
+    res.json(project);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to update contact' });
+  }
+});
+
+router.delete('/:id/contacts/:contactId', async (req: Request, res: Response) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    project.contacts = project.contacts.filter(c => c._id?.toString() !== req.params.contactId);
+    await project.save();
+    res.json(project);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to delete contact' });
+  }
+});
+
 export default router;

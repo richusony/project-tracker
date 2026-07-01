@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, FileText, FileCode, KeyRound, DollarSign,
-  Timer as TimerIcon, Pencil, Check, X, Archive,
+  Timer as TimerIcon, Pencil, Check, X, Archive, Users,
 } from 'lucide-react';
 import { getProject, updateProject, deleteProject } from '../api';
 import { IProject } from '../types';
@@ -10,17 +10,19 @@ import Timer from '../components/Timer';
 import ConfigFiles from '../components/ConfigFiles';
 import EnvVariables from '../components/EnvVariables';
 import Pricing from '../components/Pricing';
+import Contacts from '../components/Contacts';
 import { useDialog } from '../components/DialogProvider';
 import { StatusPicker } from '../components/StatusBadge';
 
-type Tab = 'timer' | 'notes' | 'config' | 'env' | 'pricing';
+type Tab = 'timer' | 'notes' | 'config' | 'env' | 'pricing' | 'contacts';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'timer',   label: 'Timer',        icon: <TimerIcon className="w-4 h-4" /> },
-  { id: 'notes',   label: 'Notes',        icon: <FileText className="w-4 h-4" /> },
-  { id: 'config',  label: 'Config Files', icon: <FileCode className="w-4 h-4" /> },
-  { id: 'env',     label: 'Env Vars',     icon: <KeyRound className="w-4 h-4" /> },
-  { id: 'pricing', label: 'Pricing',      icon: <DollarSign className="w-4 h-4" /> },
+  { id: 'timer',    label: 'Timer',        icon: <TimerIcon className="w-4 h-4" /> },
+  { id: 'notes',    label: 'Notes',        icon: <FileText className="w-4 h-4" /> },
+  { id: 'contacts', label: 'Contacts',     icon: <Users className="w-4 h-4" /> },
+  { id: 'config',   label: 'Config Files', icon: <FileCode className="w-4 h-4" /> },
+  { id: 'env',      label: 'Env Vars',     icon: <KeyRound className="w-4 h-4" /> },
+  { id: 'pricing',  label: 'Pricing',      icon: <DollarSign className="w-4 h-4" /> },
 ];
 
 function Spinner() {
@@ -244,10 +246,11 @@ export default function ProjectDetail() {
 
         {/* Content */}
         <div className="flex-1 min-w-0 animate-fade-in" key={tab}>
-          {tab === 'timer'   && <Timer project={project} onUpdate={setProject} />}
-          {tab === 'config'  && <ConfigFiles project={project} onUpdate={setProject} />}
-          {tab === 'env'     && <EnvVariables project={project} onUpdate={setProject} />}
-          {tab === 'pricing' && <Pricing project={project} onUpdate={setProject} />}
+          {tab === 'timer'    && <Timer project={project} onUpdate={setProject} />}
+          {tab === 'contacts' && <Contacts project={project} onUpdate={setProject} />}
+          {tab === 'config'   && <ConfigFiles project={project} onUpdate={setProject} />}
+          {tab === 'env'      && <EnvVariables project={project} onUpdate={setProject} />}
+          {tab === 'pricing'  && <Pricing project={project} onUpdate={setProject} />}
         </div>
       </div>
     </div>

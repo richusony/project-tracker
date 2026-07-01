@@ -41,6 +41,24 @@ export interface ITimer {
   lastStarted?: string;
 }
 
+export interface IMeetingLink {
+  _id: string;
+  platform: 'google-meet' | 'zoom' | 'teams' | 'other';
+  label?: string;
+  url: string;
+}
+
+export interface IContact {
+  _id: string;
+  name: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  meetingLinks: IMeetingLink[];
+  notes?: string;
+  createdAt: string;
+}
+
 export interface IProject {
   _id: string;
   name: string;
@@ -51,6 +69,7 @@ export interface IProject {
   configFiles: IConfigFile[];
   envVariables: IEnvVariable[];
   pricing: IPricing;
+  contacts: IContact[];
   deletedAt?: string;
   createdAt: string;
   updatedAt: string;
